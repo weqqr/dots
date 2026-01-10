@@ -1,0 +1,40 @@
+#:schema https://docs.jj-vcs.dev/latest/config-schema.json
+
+[ui]
+default-command = ["log", "--no-pager"]
+conflict-marker-style = "git"
+
+[aliases]
+tug = ["bookmark", "move", "--from", "heads(::@- & bookmarks())", "--to", "@-"]
+rebase-all = ["rebase", "-s", "roots(trunk()..mutable())", "-d", "trunk()"]
+
+[template-aliases]
+nlog = '''
+        change_id.shortest(1)
+        ++ " "
+        ++ coalesce(self.description().first_line(), label("empty", "[no description]"))
+        ++ "\n"
+        ++ separate(" ",
+                "by", author.name(),
+                "on", author.timestamp().local().format("%b %d %Y"),
+                "|",
+                if(self.empty(), label("empty", "empty")),
+                if(self.conflict(), label("error", "CONFLICT")),
+                if(self.immutable(), "imm"),
+                branches(self),
+                self.tags(),
+                self.working_copies(),
+                label("commit_id", "#") ++ self.commit_id().shortest(8)
+        )
+        ++ "\n "
+'''
+
+'branches(commit)' = '''
+        commit.bookmarks()
+'''
+
+[templates]
+log = "nlog"
+
+[revsets]
+log-graph-prioritize = 'trunk()'
